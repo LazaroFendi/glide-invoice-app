@@ -1,0 +1,849 @@
+import React, { useState, useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import 'react-tabs/style/react-tabs.css';
+import { InvoiceData, LogoSettings, ThankYouSettings } from '../types';
+
+interface InvoiceFormProps {
+  defaultValues: InvoiceData;
+  onUpdate: (data: InvoiceData) => void;
+  logoSettings: LogoSettings;
+  setLogoSettings: (settings: LogoSettings) => void;
+  thankYouSettings: ThankYouSettings;
+  setThankYouSettings: (settings: ThankYouSettings) => void;
+  generatePDF: () => void;
+}
+
+const InvoiceForm: React.FC<InvoiceFormProps> = ({
+  defaultValues,
+  onUpdate,
+  logoSettings,
+  setLogoSettings,
+  thankYouSettings,
+  setThankYouSettings,
+  generatePDF,
+}) => {
+  const { control, handleSubmit, watch, setValue } = useForm<InvoiceData>({
+    defaultValues,
+  });
+
+  // Forward form data to parent
+  const formValues = watch();
+  useEffect(() => {
+    onUpdate(formValues);
+  }, [formValues, onUpdate]);
+
+  // Handle logo upload
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setLogoSettings({
+        ...logoSettings,
+        file: e.target.files[0],
+      });
+    }
+  };
+
+  // Handle thank you page upload
+  const handleThankYouUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setThankYouSettings({
+        ...thankYouSettings,
+        file: e.target.files[0],
+      });
+    }
+  };
+
+  // Handle logo size change
+  const handleLogoSizeChange = (e: React.ChangeEvent<HTMLInputElement>, property: 'width' | 'height') => {
+    const value = parseInt(e.target.value);
+    setLogoSettings({
+      ...logoSettings,
+      [property]: value,
+    });
+  };
+
+  // Handle logo position change
+  const handleLogoPositionChange = (e: React.ChangeEvent<HTMLInputElement>, axis: 'x' | 'y') => {
+    const value = parseInt(e.target.value);
+    setLogoSettings({
+      ...logoSettings,
+      position: {
+        ...logoSettings.position,
+        [axis]: value,
+      },
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <Tabs>
+        <TabList className="flex border-b mb-4">
+          <Tab className="px-4 py-2 font-medium text-gray-600 hover:text-black cursor-pointer">
+            Invoice Details
+          </Tab>
+          <Tab className="px-4 py-2 font-medium text-gray-600 hover:text-black cursor-pointer">
+            Logo & Branding
+          </Tab>
+          <Tab className="px-4 py-2 font-medium text-gray-600 hover:text-black cursor-pointer">
+            Thank You Page
+          </Tab>
+        </TabList>
+
+        <TabPanel>
+          {/* Invoice Details Tab */}
+          <form className="space-y-6">
+            <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+              <h3 className="text-lg font-medium mb-4">Basic Info</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Invoice Number
+                  </label>
+                  <Controller
+                    name="invoiceNumber"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Customer ID
+                  </label>
+                  <Controller
+                    name="customerId"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date
+                  </label>
+                  <Controller
+                    name="date"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        placeholder="DD MONTH YYYY"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Supplier Booking
+                  </label>
+                  <Controller
+                    name="supplier"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        placeholder="SUPPLIER YYYY"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+              <h3 className="text-lg font-medium mb-4">Client Information</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Client Name
+                  </label>
+                  <Controller
+                    name="clientName"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Address
+                  </label>
+                  <Controller
+                    name="clientAddress"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Area / ZIP Code
+                  </label>
+                  <Controller
+                    name="clientAreaZipCode"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    City
+                  </label>
+                  <Controller
+                    name="clientCity"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Country
+                  </label>
+                  <Controller
+                    name="clientCountry"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+              <h3 className="text-lg font-medium mb-4">Offer Pending Section</h3>
+              
+              <div className="flex items-center mb-4">
+                <Controller
+                  name="showOfferPending"
+                  control={control}
+                  render={({ field: { onChange, value, ...field } }) => (
+                    <input
+                      {...field}
+                      type="checkbox"
+                      checked={value}
+                      onChange={(e) => onChange(e.target.checked)}
+                      className="mr-2"
+                    />
+                  )}
+                />
+                <span className="text-sm font-medium">Show Offer Pending Section</span>
+              </div>
+              
+              {watch('showOfferPending') && (
+                <div className="pl-4 border-l-2 border-gray-300 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Deposit Amount (USD)
+                    </label>
+                    <Controller
+                      name="offerDeposit"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="XX,XXX"
+                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                        />
+                      )}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Due Date
+                    </label>
+                    <Controller
+                      name="offerDueDate"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="DD MM YYYY"
+                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+              <h3 className="text-lg font-medium mb-4">Payment Details</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <Controller
+                    name="descriptionTitle"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        placeholder="DESCRIPTION NIHI SUMBA BOOKING 25XXXXX"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Deposit Payment Due Date
+                    </label>
+                    <Controller
+                      name="depositDueDate"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="DD MM YYYY"
+                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                        />
+                      )}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Deposit Amount (USD)
+                    </label>
+                    <Controller
+                      name="depositAmount"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="XX,XXX"
+                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                        />
+                      )}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Balance Payment Due Date
+                    </label>
+                    <Controller
+                      name="balanceDueDate"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="DD MM YYYY"
+                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                        />
+                      )}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Balance Amount (USD)
+                    </label>
+                    <Controller
+                      name="balanceAmount"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="XX,XXX"
+                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Total Amount (USD)
+                  </label>
+                  <Controller
+                    name="totalAmount"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        placeholder="XX,XXX"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm font-bold"
+                      />
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+              <h3 className="text-lg font-medium mb-4">Payment Instructions</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Account Holder
+                  </label>
+                  <Controller
+                    name="accountHolder"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Account Number
+                    </label>
+                    <Controller
+                      name="accountNumber"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="text"
+                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                        />
+                      )}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Routing Number
+                    </label>
+                    <Controller
+                      name="routingNumber"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="text"
+                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                        />
+                      )}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Swift/BIC
+                    </label>
+                    <Controller
+                      name="swiftBIC"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="text"
+                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Bank Name
+                  </label>
+                  <Controller
+                    name="bankName"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Bank Address
+                  </label>
+                  <Controller
+                    name="bankAddress"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Note (Optional)
+                  </label>
+                  <Controller
+                    name="paymentNote"
+                    control={control}
+                    render={({ field }) => (
+                      <textarea
+                        {...field}
+                        rows={3}
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                        placeholder="Please process the bank transfer to the bank account listed above and set it up for us to receive the exact amount listed. Once processed, kindly share a copy or screenshot of the bank transfer with your surf travel consultant so we can track it and confirm receipt."
+                      />
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+              <h3 className="text-lg font-medium mb-4">Booking Summary</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Booking ID
+                  </label>
+                  <Controller
+                    name="bookingId"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Supplier
+                  </label>
+                  <Controller
+                    name="supplierName"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Customer Full Name
+                  </label>
+                  <Controller
+                    name="customerFullName"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Package
+                  </label>
+                  <Controller
+                    name="package"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Number of Adults
+                  </label>
+                  <Controller
+                    name="adults"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Dates
+                  </label>
+                  <Controller
+                    name="dates"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        placeholder="MONTH DDth - DDnd, YYYY | X nights"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Accommodation
+                  </label>
+                  <Controller
+                    name="accommodation"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Inclusions/Additional Notes
+                  </label>
+                  <Controller
+                    name="inclusions"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                      />
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+              <h3 className="text-lg font-medium mb-4">Booking Description</h3>
+              <div className="flex items-center mb-4">
+                <Controller
+                  name="showBookingDescription"
+                  control={control}
+                  render={({ field: { onChange, value, ...field } }) => (
+                    <input
+                      {...field}
+                      type="checkbox"
+                      checked={value}
+                      onChange={(e) => onChange(e.target.checked)}
+                      className="mr-2"
+                    />
+                  )}
+                />
+                <span className="text-sm font-medium">Include Booking Description Page</span>
+              </div>
+              
+              {watch('showBookingDescription') && (
+                <div className="pl-4 border-l-2 border-gray-300">
+                  <Controller
+                    name="bookingDescription"
+                    control={control}
+                    render={({ field }) => (
+                      <textarea
+                        {...field}
+                        rows={10}
+                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                        placeholder="Enter booking description here..."
+                      />
+                    )}
+                  />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-end mt-6">
+              <button
+                type="button"
+                onClick={generatePDF}
+                className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition"
+              >
+                Export PDF
+              </button>
+            </div>
+          </form>
+        </TabPanel>
+
+        <TabPanel>
+          {/* Logo & Branding Tab */}
+          <div className="space-y-6">
+            <div className="p-4 bg-white border rounded-md shadow-sm">
+              <h3 className="text-lg font-medium mb-4">First Page Logo</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Upload Logo
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Logo Width (px)
+                  </label>
+                  <input
+                    type="number"
+                    value={logoSettings?.width}
+                    onChange={(e) => handleLogoSizeChange(e, 'width')}
+                    className="w-full border rounded p-2 mt-1"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Logo Height (px)
+                  </label>
+                  <input
+                    type="number"
+                    value={logoSettings?.height}
+                    onChange={(e) => handleLogoSizeChange(e, 'height')}
+                    className="w-full border rounded p-2 mt-1"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Logo Position - Right (px)
+                  </label>
+                  <input
+                    type="number"
+                    value={logoSettings?.position?.x}
+                    onChange={(e) => handleLogoPositionChange(e, 'x')}
+                    className="w-full border rounded p-2 mt-1"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Logo Position - Top (px)
+                  </label>
+                  <input
+                    type="number"
+                    value={logoSettings?.position?.y}
+                    onChange={(e) => handleLogoPositionChange(e, 'y')}
+                    className="w-full border rounded p-2 mt-1"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </TabPanel>
+
+        <TabPanel>
+          {/* Thank You Page Tab */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              Thank You Page Image
+              <input
+                type="file"
+                onChange={handleThankYouUpload}
+                accept="image/*"
+                className="w-full border rounded p-2 mt-1"
+              />
+            </label>
+            
+            <p className="text-sm text-gray-500 mt-2">
+              Upload a beautiful full-page image for your Thank You Page.
+              Recommended size: A4 (2480 x 3508 pixels)
+            </p>
+          </div>
+        </TabPanel>
+      </Tabs>
+    </div>
+  );
+};
+
+export default InvoiceForm; 

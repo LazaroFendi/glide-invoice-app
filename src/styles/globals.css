@@ -1,26 +1,424 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Condensed:wght@700&display=swap');
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --foreground: #0f0f0f;
+  --background: #fafafa;
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --muted: #f2f2f2;
+  --muted-foreground: #565656;
+  --border: #e5e5e5;
+  
+  /* A4 constants */
+  --a4-width: 210mm;
+  --a4-height: 297mm;
+  --a4-margin: 2cm;
+  --page-content-width: calc(var(--a4-width) - (var(--a4-margin) * 2));
+  --page-content-height: calc(var(--a4-height) - (var(--a4-margin) * 2));
 }
 
 body {
-  background: var(--background);
+  font-family: 'Roboto', sans-serif;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--background);
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 700;
+}
+
+/* Modern form styling */
+input, textarea, select {
+  transition: border-color 0.15s ease;
+  background-color: #ffffff;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  ring: 1px solid var(--primary);
+}
+
+/* Button styling */
+button {
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* Tab styling */
+.react-tabs__tab--selected {
+  border-bottom: 2px solid var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+/* Invoice-specific styles */
+.invoice-heading {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 10pt;
+  text-transform: uppercase;
+}
+
+.invoice-text {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  font-size: 10pt;
+}
+
+.invoice-small-text {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  font-size: 8pt;
+}
+
+.invoice-title {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 15pt;
+  text-transform: uppercase;
+}
+
+/* Print styles */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+.page-break-before {
+  page-break-before: always;
+  break-before: page;
+}
+
+@media print {
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+    background-color: white;
+    overflow: hidden;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .page-break-before {
+    page-break-before: always;
+    break-before: page;
+  }
+  
+  /* Hide UI elements when printing */
+  header, footer, .form-container, .sticky, button {
+    display: none !important;
+  }
+  
+  /* Make sure content fits within A4 */
+  .invoice-preview {
+    width: 210mm !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .invoice-page {
+    width: 210mm !important;
+    height: 297mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    page-break-after: always;
+    break-after: page;
+    position: relative !important;
+  }
+
+  .invoice-content {
+    padding: 2cm !important;
+    box-sizing: border-box !important;
+    height: calc(297mm - 4cm) !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+  
+  /* Direct logo positioning */
+  .absolute-logo {
+    position: absolute !important;
+    display: block !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Simple company header right alignment */
+  #company-header {
+    right: 0 !important;
+    position: absolute !important;
+    text-align: right !important;
+  }
+  
+  /* Company header styling for consistent rendering in PDF */
+  #company-header p {
+    font-weight: 300 !important;
+    font-size: 8pt !important;
+    line-height: 1.1 !important;
+    font-family: 'Roboto', sans-serif !important;
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+  }
+  
+  /* Ensure booking description content doesn't exceed bottom margin */
+  .booking-description {
+    max-height: calc(297mm - 4cm) !important;
+    height: auto !important;
+    overflow: hidden !important;
+    position: relative !important;
+    padding-bottom: 0 !important;
+  }
+  
+  /* Ensure paragraphs in booking description don't get cut off */
+  .booking-description p:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  
+  /* Ensure page number is always at the bottom 2cm margin */
+  .invoice-page .invoice-content div[style*="position: absolute; bottom"] {
+    bottom: 0 !important;
+    position: absolute !important;
+  }
+  
+  /* Fix for background colors in PDF */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Ensure company header is exactly at -10mm from the right edge */
+  #company-header {
+    right: -10mm !important;
+    position: absolute !important;
+    text-align: right !important;
+  }
+  
+  /* High quality logo rendering in print */
+  .absolute-logo {
+    position: absolute !important;
+    overflow: visible !important;
+    z-index: 10 !important;
+    display: block !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    image-rendering: high-quality !important;
+  }
+  
+  .absolute-logo img {
+    object-fit: contain !important;
+    object-position: center !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    image-rendering: high-quality !important;
+  }
+  
+  /* Ensure specific positioning for different logo instances */
+  #first-page-logo {
+    transform: none !important;
+  }
+  
+  #secondary-page-logo,
+  #thank-you-page-logo {
+    transform: none !important;
+  }
+}
+
+/* A4 page container */
+.invoice-page {
+  width: var(--a4-width);
+  height: var(--a4-height);
+  position: relative;
+  box-sizing: border-box;
+  background-color: #fff;
+  margin: 0 auto 2rem auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  /* Prevent zooming in Safari */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Content within the page */
+.invoice-content {
+  padding: var(--a4-margin) var(--a4-margin) var(--a4-margin) var(--a4-margin);
+  box-sizing: border-box;
+  height: calc(297mm - 4cm);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Company header positioning - right aligned at -10mm from the edge */
+#company-header {
+  right: -10mm !important;
+  position: absolute !important;
+  text-align: right !important;
+}
+
+/* Direct logo positioning with improved export quality */
+.absolute-logo {
+  position: absolute !important;
+  z-index: 10 !important;
+  overflow: visible !important;
+  image-rendering: high-quality !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.absolute-logo img {
+  object-fit: contain !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  image-rendering: high-quality !important;
+}
+
+/* Booking description styles */
+.booking-description {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  font-size: 10pt;
+  word-wrap: break-word;
+  white-space: pre-line;
+  position: relative;
+  max-height: calc(297mm - 4cm - 2mm); /* Reduced buffer from 5mm to 2mm to fit more text */
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+/* Booking description container with enforced bottom margin */
+.booking-description-container {
+  position: relative;
+  padding-bottom: 8mm; /* Reduced from 10mm to 8mm to allow more content while keeping margin */
+  margin-bottom: 0;
+  box-sizing: border-box;
+}
+
+.booking-description p {
+  margin-bottom: 0.35rem;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  orphans: 3;
+  widows: 3;
+}
+
+/* Ensure last paragraph respects bottom margin */
+.booking-description p:last-child {
+  margin-bottom: 0; /* No extra margin beyond 2cm */
+  padding-bottom: 0;
+}
+
+/* Special rules for PDF export mode */
+[data-pdf-export-mode="true"] .booking-description {
+  overflow: visible !important;
+  max-height: none !important; /* Allow content to be fully rendered */
+}
+
+/* Ensure content doesn't exceed 2cm margins in export */
+[data-pdf-export-mode="true"] .booking-description-container {
+  padding-bottom: calc(var(--a4-margin) + 2mm) !important; /* Reduced from 5mm to 2mm buffer on export */
+  position: relative !important;
+  margin-bottom: 0 !important;
+}
+
+/* Keep invoice-content overflow visible during export */
+[data-pdf-export-mode="true"] .invoice-content {
+  overflow: visible !important;
+}
+
+@media print {
+  /* Ensure booking description content doesn't exceed bottom margin */
+  .booking-description {
+    max-height: calc(297mm - 4cm) !important; /* Enforce exact 2cm margin */
+    height: auto !important;
+    overflow: hidden !important;
+    position: relative !important;
+    padding-bottom: 0 !important;
+  }
+  
+  /* For printing, ensure last paragraph respects margin */
+  .booking-description p:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+/* Responsive preview container */
+@media (min-width: 1024px) {
+  .preview-container {
+    height: calc(100vh - 180px);
+    overflow-y: auto;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .preview-container {
+    height: 800px;
+    overflow-y: auto;
+    padding: 16px;
+  }
+}
+
+/* Make sure fonts render correctly */
+.font-roboto {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+.font-roboto-condensed {
+  font-family: 'Roboto Condensed', sans-serif !important;
+}
+
+/* Fix PDF export */
+#invoice-preview {
+  width: 100%;
+  background-color: white;
+}
+
+/* Specific PDF rendering styles */
+@media print, screen {
+  .invoice-text p {
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+  }
+  
+  .invoice-heading {
+    margin-bottom: 0.25rem !important;
+  }
+  
+  /* Make sure pages remain A4 size exactly */
+  body[data-pdf-export="true"] {
+    width: 210mm;
+    height: 297mm;
+  }
+  
+  /* Ensure elements don't exceed A4 boundaries */
+  .booking-description {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
+/* Panel expansion/contraction transitions */
+.transition-all {
+  transition-property: all;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
