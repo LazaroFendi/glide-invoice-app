@@ -86,6 +86,7 @@ export interface InvoiceData {
   showItemsTable?: boolean;
   showOnlyTotal?: boolean;
   currency?: string;
+  bookingSummaryDetails?: string;
 }
 
 export interface PaymentItem {

@@ -63,10 +63,14 @@ const formatCurrency = (amount: string | number, currency = 'USD') => {
   // Check if conversion resulted in a valid number
   if (isNaN(numericAmount)) return amount;
   
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency || 'USD',
+  // Format the number with commas but no currency symbol
+  const formattedNumber = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(numericAmount);
+  
+  // Return with 3-letter currency code
+  return `${formattedNumber} ${currency || 'USD'}`;
 };
 
 // Calculate total from payment items
@@ -263,11 +267,26 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({
 
           {/* Offer Pending Section */}
           {invoiceData.showOfferPending && (
-            <div className="mb-4" style={{ padding: '6px 8px', borderRadius: '2px', border: '1px solid #e5e7eb' }}>
-              <p className="invoice-text mb-0" style={{ textTransform: 'uppercase' }}>
+            <div 
+              className="mb-4" 
+              style={{ 
+                padding: '6px 8px', 
+                borderRadius: '2px', 
+                border: '1px solid #e5e7eb' 
+              }}
+              data-pdf-element="offer-pending-box"
+              data-force-padding="true"
+            >
+              <p 
+                className="invoice-text mb-0 pdf-text-shift" 
+                style={{ textTransform: 'uppercase' }}
+              >
                 {invoiceData.offerPendingTitle || "OFFER PENDING:"}
               </p>
-              <p className="invoice-text" style={{ lineHeight: '1.2' }}>
+              <p 
+                className="invoice-text pdf-text-shift" 
+                style={{ lineHeight: '1.2' }}
+              >
                 {invoiceData.offerPendingText || `To confirm your booking, you must pay the full deposit of ${invoiceData.offerDeposit} by ${invoiceData.offerDueDate} and balance before due date listed below, otherwise the booking will be cancelled. Please find full booking terms and conditions listed in your booking description.`}
               </p>
             </div>
@@ -299,12 +318,12 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                         <div>
                           <div style={{ display: 'flex', marginBottom: '8px' }}>
                             <div style={{ width: '50%' }}>DEPOSIT PAYMENT</div>
-                            <div style={{ width: '25%' }}>DUE ON {invoiceData.depositDueDate}</div>
+                            <div style={{ width: '25%', whiteSpace: 'nowrap' }}>DUE ON {invoiceData.depositDueDate}</div>
                             <div style={{ width: '25%', textAlign: 'right' }}>{formatCurrency(invoiceData.depositAmount, invoiceData.currency)}</div>
                           </div>
                           <div style={{ display: 'flex', marginBottom: '8px' }}>
                             <div style={{ width: '50%' }}>BALANCE PAYMENT</div>
-                            <div style={{ width: '25%' }}>DUE ON {invoiceData.balanceDueDate}</div>
+                            <div style={{ width: '25%', whiteSpace: 'nowrap' }}>DUE ON {invoiceData.balanceDueDate}</div>
                             <div style={{ width: '25%', textAlign: 'right' }}>{formatCurrency(invoiceData.balanceAmount, invoiceData.currency)}</div>
                           </div>
                         </div>
@@ -316,7 +335,7 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                             .map((item, index) => (
                               <div key={`payment-item-${index}`} style={{ display: 'flex', marginBottom: '8px' }}>
                                 <div style={{ width: '50%' }}>{item.description || item.name || 'PAYMENT ITEM'}</div>
-                                <div style={{ width: '25%' }}>{item.dueDate ? `DUE ON ${item.dueDate}` : ''}</div>
+                                <div style={{ width: '25%', whiteSpace: 'nowrap' }}>{item.dueDate ? `DUE ON ${item.dueDate}` : ''}</div>
                                 <div style={{ width: '25%', textAlign: 'right' }}>{formatCurrency(item.amount, invoiceData.currency)}</div>
                               </div>
                             ))}
@@ -339,7 +358,7 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                     ) : (
                       <>
                         <div style={{ width: '50%' }}>TOTAL AMOUNT</div>
-                        <div style={{ width: '25%' }}>
+                        <div style={{ width: '25%', whiteSpace: 'nowrap' }}>
                           {invoiceData.paymentItems && invoiceData.paymentItems.length > 0 && invoiceData.paymentItems[0].dueDate ? (
                             <span>DUE ON {invoiceData.paymentItems[0].dueDate}</span>
                           ) : null}
@@ -391,11 +410,17 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({
                 {invoiceData.showBookingId && <p>Booking ID: {invoiceData.bookingId}</p>}
                 {invoiceData.showSupplier && <p>Supplier: {invoiceData.supplier}</p>}
                 {invoiceData.showCustomerName && <p>Customer: {invoiceData.customerFullName}</p>}
-                {invoiceData.showPackage && <p>Package: {invoiceData.package}</p>}
-                {invoiceData.showAdults && <p>{invoiceData.adults} adults</p>}
-                {invoiceData.showDates && <p>{invoiceData.dates}</p>}
-                {invoiceData.showAccommodation && <p>{invoiceData.accommodation}</p>}
-                {invoiceData.showInclusions && <p>{invoiceData.inclusions}</p>}
+                {invoiceData.bookingSummaryDetails && (
+                  <div style={{ 
+                    whiteSpace: 'pre-line',
+                    wordWrap: 'break-word',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
+                    maxWidth: '100%'
+                  }}>
+                    {invoiceData.bookingSummaryDetails}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -513,12 +538,36 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({
 
       {/* Thank You Page if available */}
       {thankYouUrl && (
-        <div id="invoice-thank-you" className="invoice-page page-break-before">
-          {/* Remove the secondary logo from thank you page */}
+        <div 
+          id="invoice-thank-you" 
+          className="invoice-page page-break-before"
+          style={{
+            padding: 0,
+            margin: 0,
+            overflow: 'hidden',
+            position: 'relative',
+            backgroundColor: '#000000',
+            width: '210mm',
+            height: '297mm'
+          }}
+        >
           <img
             src={thankYouUrl}
             alt="Thank You"
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ 
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '210mm',
+              height: '297mm',
+              objectFit: 'cover',
+              objectPosition: 'center center',
+              margin: 0,
+              padding: 0,
+              border: 0,
+              display: 'block'
+            }}
+            data-pdf-element="thank-you-image"
           />
         </div>
       )}

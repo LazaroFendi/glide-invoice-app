@@ -422,3 +422,337 @@ button {
   transition-duration: 300ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Add rules for export mode to ensure consistent rendering */
+[data-pdf-export-mode="true"] [data-pdf-element="offer-pending-box"] {
+  padding: 5px 8px !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+[data-pdf-export-mode="true"] .pdf-text-shift {
+  position: static !important;
+  top: 0 !important;
+  transform: none !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Extra forceful rules for the PDF export */
+@media print {
+  [data-pdf-element="offer-pending-box"] {
+    padding: 5px 8px !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+  
+  .pdf-text-shift {
+    position: static !important;
+    top: 0 !important;
+    transform: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+/* Direct targeting with higher specificity for the offer pending box in PDF context */
+[data-pdf-export-mode="true"] [data-force-padding="true"] {
+  padding: 5px 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+[data-pdf-export-mode="true"] [data-force-padding="true"] p:last-child {
+  margin: 0 !important;
+  position: static !important;
+  top: 0 !important;
+}
+
+/* Special handling for Thank You page */
+#invoice-thank-you {
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  background-color: #000000 !important;
+  position: relative !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+#invoice-thank-you img {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+/* Extreme measures to prevent white lines in print and PDF export */
+@page {
+  margin: 0;
+}
+
+@media print {
+  body, html {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background-color: #000000 !important;
+  }
+  
+  #invoice-thank-you {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    outline: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    background-color: #000000 !important;
+    box-shadow: none !important;
+    page-break-before: always !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+  }
+  
+  #invoice-thank-you img {
+    position: absolute !important;
+    display: block !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 210mm !important; 
+    height: 297mm !important;
+    object-fit: cover !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    outline: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+  }
+  
+  /* Bleed settings to eliminate any potential white edges */
+  @page {
+    bleed: 0;
+    marks: none;
+    trim: 0;
+  }
+}
+
+/* Enhanced PDF export mode styling */
+[data-pdf-export-mode="true"] {
+  --pdf-width: 210mm;
+  --pdf-height: 297mm;
+}
+
+/* More aggressive Thank You page styling */
+[data-pdf-export-mode="true"] #invoice-thank-you {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 210mm !important;
+  height: 297mm !important;
+  background-color: #000 !important;
+}
+
+[data-pdf-export-mode="true"] #invoice-thank-you img {
+  position: absolute !important;
+  display: block !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 210mm !important;
+  height: 297mm !important;
+  object-fit: cover !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  z-index: 1 !important;
+}
+
+/* Force vertical centering in print context too */
+@media print {
+  [data-pdf-element="offer-pending-box"] {
+    padding: 5px 8px !important;
+    margin-bottom: 1rem !important;
+    border-radius: 2px !important;
+    border: 1px solid #e5e7eb !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+  }
+  
+  [data-pdf-element="offer-pending-box"] p.invoice-text.mb-0 {
+    text-transform: uppercase !important;
+    margin: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    font-family: 'Roboto', sans-serif !important;
+    font-weight: 300 !important;
+    font-size: 10pt !important;
+    line-height: 1.2 !important;
+  }
+  
+  [data-pdf-element="offer-pending-box"] p.invoice-text:not(.mb-0) {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.2 !important;
+    font-family: 'Roboto', sans-serif !important;
+    font-weight: 300 !important;
+    font-size: 10pt !important;
+  }
+}
+
+/* Extreme measures to prevent white lines in print */
+@media print {
+  body, html {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+  
+  #invoice-thank-you {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    outline: 0 !important;
+    overflow: hidden !important;
+    position: relative !important;
+    page-break-before: always !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    background-color: #000 !important;
+  }
+  
+  #invoice-thank-you img {
+    position: absolute !important;
+    display: block !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 210mm !important; 
+    height: 297mm !important;
+    object-fit: cover !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    outline: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+  }
+  
+  /* Fix any potential page breaks or margins */
+  .page-break-before {
+    page-break-before: always !important;
+    break-before: page !important;
+    display: block !important;
+  }
+  
+  /* Eliminate any potential browser rendering artifacts */
+  * {
+    transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    -webkit-font-smoothing: antialiased !important;
+  }
+}
+
+/* Fresh enhanced offer pending box styling for proper vertical centering */
+[data-pdf-export-mode="true"] [data-pdf-element="offer-pending-box"] {
+  padding: 5px 8px !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+[data-pdf-export-mode="true"] [data-pdf-element="offer-pending-box"] p.invoice-text.mb-0 {
+  text-transform: uppercase !important;
+  margin: 0 !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  font-family: 'Roboto', sans-serif !important;
+  font-weight: 300 !important;
+  font-size: 10pt !important;
+  line-height: 1.2 !important;
+}
+
+[data-pdf-export-mode="true"] [data-pdf-element="offer-pending-box"] p.invoice-text:not(.mb-0) {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.2 !important;
+  font-family: 'Roboto', sans-serif !important;
+  font-weight: 300 !important;
+  font-size: 10pt !important;
+}
+
+/* Force vertical centering in print context too */
+@media print {
+  [data-pdf-element="offer-pending-box"] {
+    padding: 5px 8px !important;
+    margin-bottom: 1rem !important;
+    border-radius: 2px !important;
+    border: 1px solid #e5e7eb !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+  }
+  
+  [data-pdf-element="offer-pending-box"] p.invoice-text.mb-0 {
+    text-transform: uppercase !important;
+    margin: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    font-family: 'Roboto', sans-serif !important;
+    font-weight: 300 !important;
+    font-size: 10pt !important;
+    line-height: 1.2 !important;
+  }
+  
+  [data-pdf-element="offer-pending-box"] p.invoice-text:not(.mb-0) {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.2 !important;
+    font-family: 'Roboto', sans-serif !important;
+    font-weight: 300 !important;
+    font-size: 10pt !important;
+  }
+}
+
+/* Direct positioning fix for Offer Pending box text */
+[data-pdf-export-mode="true"] [data-pdf-element="offer-pending-box"] p {
+  position: relative !important;
+  top: -7px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Similar fix for print context */
+@media print {
+  [data-pdf-element="offer-pending-box"] p {
+    position: relative !important;
+    top: -7px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}

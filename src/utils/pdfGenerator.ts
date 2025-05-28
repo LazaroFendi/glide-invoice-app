@@ -2,8 +2,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { InvoiceData, LogoSettings, ThankYouSettings } from '../types';
 
-// The most reliable way to convert HTML to PDF is to capture each page as a high-resolution image
-// and place it exactly in the PDF document at A4 size
+// Completely revamp the HTML to PDF conversion with direct control over rendering
 export const htmlToPdf = async (element: HTMLElement, filename: string): Promise<void> => {
   try {
     // Create PDF with A4 dimensions
@@ -31,6 +30,11 @@ export const htmlToPdf = async (element: HTMLElement, filename: string): Promise
     // Before processing any pages, ensure all images are properly loaded
     await preloadAllImages(element);
     
+    // We'll only add export mode attribute to the cloned document, not the original
+    // to prevent visible changes during export
+    // DO NOT set data-pdf-export-mode on the original element
+    // element.setAttribute('data-pdf-export-mode', 'true');
+    
     // Process each page sequentially
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i] as HTMLElement;
@@ -42,6 +46,9 @@ export const htmlToPdf = async (element: HTMLElement, filename: string): Promise
       
       try {
         console.log(`Rendering page ${i + 1}/${pages.length}`);
+        
+        // Check if this is a Thank You page
+        const isThankYouPage = page.id === 'invoice-thank-you';
         
         // Store original styles
         const originalStyles = {
@@ -62,64 +69,133 @@ export const htmlToPdf = async (element: HTMLElement, filename: string): Promise
           }
         });
         
-        // Set exact A4 dimensions for rendering and ensure overflow is visible during capture
+        // Set exact A4 dimensions for rendering
         page.style.width = `${A4_WIDTH}mm`;
         page.style.height = `${A4_HEIGHT}mm`;
         page.style.position = 'relative';
-        page.style.overflow = 'visible';
         
-        // Render the page to canvas with higher scale for better quality
+        // Special handling for Thank You page
+        if (isThankYouPage) {
+          // Special rendering for Thank You page to prevent white lines
+          console.log('Rendering Thank You page with special treatment');
+          
+          // For Thank You page, force background to black
+          page.style.backgroundColor = '#000000';
+          page.style.padding = '0';
+          page.style.margin = '0';
+          page.style.overflow = 'hidden';
+          
+          // Get the image
+          const img = page.querySelector('img[data-pdf-element="thank-you-image"]');
+          if (img instanceof HTMLImageElement) {
+            // Set absolute dimensions
+            img.style.position = 'absolute';
+            img.style.top = '0';
+            img.style.left = '0';
+            img.style.width = `${A4_WIDTH}mm`;
+            img.style.height = `${A4_HEIGHT}mm`;
+            img.style.margin = '0';
+            img.style.padding = '0';
+            img.style.border = '0';
+            img.style.objectFit = 'cover';
+          }
+        } else {
+          // For normal pages, overflow can be visible
+          page.style.overflow = 'visible';
+        }
+                
+        // Use higher scale for better quality rendering
+        const scale = isThankYouPage ? 5 : 3; // Higher scale for thank you page
+        
+        // PDF-SPECIFIC COMPENSATION FOR OFFER PENDING BOX RENDERED BY HTML2CANVAS
+        // const offerPendingBoxOnPage = page.querySelector('[data-pdf-element="offer-pending-box"]');
+        // if (offerPendingBoxOnPage instanceof HTMLElement) {
+        //     console.log('[htmlToPdf] PRE-HTML2CANVAS: REMOVING ALL PREVIOUS ATTEMPTS HERE.');
+        //     offerPendingBoxOnPage.style.backgroundColor = ''; 
+        //     offerPendingBoxOnPage.style.paddingBottom = ''; // Reset to original
+        //     const paragraphsInOfferPending = offerPendingBoxOnPage.querySelectorAll('p');
+        //     paragraphsInOfferPending.forEach(p => {
+        //         if (p instanceof HTMLElement) {
+        //             p.style.position = 'static'; 
+        //             p.style.top = 'auto';      
+        //             p.style.paddingTop = '0px'; 
+        //         }
+        //     });
+        // } else {
+        //     console.log('[htmlToPdf] PRE-HTML2CANVAS: Offer Pending Box NOT found on current page, no pre-styles to remove.');
+        // }
+
+        // Render the page to canvas with custom settings based on page type
         const canvas = await html2canvas(page, {
-          scale: 3, // Higher scale for better quality
+          scale: scale, 
           useCORS: true,
           allowTaint: true,
-          logging: false,
-          backgroundColor: '#FFFFFF',
-          onclone: (clonedDoc: Document) => {
-            // Ensure text is not cut off in the cloned document
-            const clonedPage = clonedDoc.querySelector(`.invoice-page:nth-child(${i + 1})`) as HTMLElement;
-            if (clonedPage) {
-              const descriptions = clonedPage.querySelectorAll('.booking-description');
-              descriptions.forEach(desc => {
-                if (desc instanceof HTMLElement) {
-                  // Create container with extra padding if it doesn't exist
-                  const container = desc.parentElement;
-                  if (container) {
-                    container.classList.add('booking-description-container');
-                    
-                    // Enforce strict bottom margin
-                    container.style.position = 'relative';
-                    container.style.boxSizing = 'border-box';
-                    container.style.paddingBottom = '22mm'; // Reduced from 25mm to 22mm to allow more content while keeping safe margin
-                    
-                    // Set overflow to visible but maintain strict bottom margin
-                    desc.style.overflow = 'visible';
-                    desc.style.maxHeight = 'none';
-                    
-                    // Find all paragraphs that would exceed the 2cm margin
-                    const paragraphs = desc.querySelectorAll('p');
-                    
-                    // Ensure last paragraph is never cut off by adding more padding
-                    const lastParagraph = paragraphs[paragraphs.length - 1];
-                    if (lastParagraph) {
-                      lastParagraph.style.marginBottom = '0';
-                      lastParagraph.style.paddingBottom = '0';
-                      
-                      // Set position to stop any overflow
-                      lastParagraph.style.position = 'relative';
-                    }
-                    
-                    // Add a spacer div at the end to enforce margin if needed
-                    const spacer = clonedDoc.createElement('div');
-                    spacer.style.height = '5mm';
-                    spacer.style.width = '100%';
-                    spacer.style.position = 'relative';
-                    spacer.style.display = 'block';
-                    desc.appendChild(spacer);
-                  }
-                }
-              });
+          logging: true, // Enable html2canvas logging for more insights
+          backgroundColor: isThankYouPage ? '#000000' : '#FFFFFF',
+          onclone: (clonedDoc: Document, clonedElement: HTMLElement) => {
+            console.log('[htmlToPdf onclone] Executing onclone. Attempting to add spacer to Offer Pending Box.');
+            clonedDoc.documentElement.setAttribute('data-pdf-export-mode', 'true');
+            
+            const styleTag = clonedDoc.createElement('style');
+            styleTag.textContent = `[data-pdf-export-mode="true"] { /* Minimal styling */ }`;
+            clonedDoc.head.appendChild(styleTag);
+
+            const allElementsInClonedCanvasInput = clonedElement.querySelectorAll('*');
+            allElementsInClonedCanvasInput.forEach(el => {
+              if (el instanceof HTMLElement) {
+                el.style.visibility = 'visible';
+                el.style.opacity = '1';
+                el.style.display = window.getComputedStyle(el).display !== 'none' ? window.getComputedStyle(el).display : 'block'; 
+              }
+            });
+
+            // CORE FIX: Add a spacer div to the Offer Pending Box if found in this clonedElement
+            const offerPendingBoxInEffect = clonedElement.querySelector('[data-pdf-element="offer-pending-box"]');
+            if (offerPendingBoxInEffect instanceof HTMLElement) {
+                console.log('[htmlToPdf onclone] Offer Pending Box FOUND in onclone context. Appending 4px spacer div.');
+                const spacerDiv = clonedDoc.createElement('div');
+                spacerDiv.style.height = '4px'; // Create 4px of space
+                spacerDiv.style.width = '100%';
+                spacerDiv.style.backgroundColor = 'transparent'; // Make it invisible, just for spacing
+                offerPendingBoxInEffect.appendChild(spacerDiv);
+            } else {
+                console.log('[htmlToPdf onclone] Offer Pending Box NOT FOUND in onclone context.');
             }
+
+            // Specific handling for Thank You page (existing logic)
+            const clonedPageElementForThankYouCheck = clonedElement;
+            if (clonedPageElementForThankYouCheck.id === 'invoice-thank-you') {
+                console.log('[htmlToPdf onclone] Special handling for Thank You page in onclone.');
+            }
+            
+            // Handle booking description as before (existing logic)
+            const descriptions = clonedElement.querySelectorAll('.booking-description'); 
+            descriptions.forEach(desc => {
+              if (desc instanceof HTMLElement) {
+                const container = desc.parentElement;
+                if (container) {
+                  container.classList.add('booking-description-container');
+                  container.style.position = 'relative';
+                  container.style.boxSizing = 'border-box';
+                  container.style.paddingBottom = '22mm'; 
+                  desc.style.overflow = 'visible';
+                  desc.style.maxHeight = 'none';
+                  const paragraphs = desc.querySelectorAll('p');
+                  const lastParagraph = paragraphs[paragraphs.length - 1];
+                  if (lastParagraph) {
+                    lastParagraph.style.marginBottom = '0';
+                    lastParagraph.style.paddingBottom = '0';
+                    lastParagraph.style.position = 'relative';
+                  }
+                  const oncloneSpacer = clonedDoc.createElement('div'); // Renamed to avoid conflict
+                  oncloneSpacer.style.height = '5mm';
+                  oncloneSpacer.style.width = '100%';
+                  oncloneSpacer.style.position = 'relative';
+                  oncloneSpacer.style.display = 'block';
+                  desc.appendChild(oncloneSpacer);
+                }
+              }
+            });
           }
         } as any);
         
@@ -136,11 +212,20 @@ export const htmlToPdf = async (element: HTMLElement, filename: string): Promise
           }
         });
         
-        // Convert canvas to image data
-        const imgData = canvas.toDataURL('image/png');
-        
-        // Add the image to the PDF - ensure it covers the exact A4 size
-        pdf.addImage(imgData, 'PNG', 0, 0, A4_WIDTH, A4_HEIGHT, undefined, 'FAST');
+        // For Thank You page, use special rendering to avoid white lines
+        if (isThankYouPage) {
+          // Use a pure black page
+          pdf.setFillColor(0, 0, 0);
+          pdf.rect(0, 0, A4_WIDTH, A4_HEIGHT, 'F');
+          
+          // Add the image with exact positioning
+          const imgData = canvas.toDataURL('image/png');
+          pdf.addImage(imgData, 'PNG', 0, 0, A4_WIDTH, A4_HEIGHT, undefined, 'FAST');
+        } else {
+          // Standard image addition for normal pages
+          const imgData = canvas.toDataURL('image/png');
+          pdf.addImage(imgData, 'PNG', 0, 0, A4_WIDTH, A4_HEIGHT, undefined, 'FAST');
+        }
         
         console.log(`Added page ${i + 1} to PDF`);
       } catch (err) {
@@ -148,6 +233,10 @@ export const htmlToPdf = async (element: HTMLElement, filename: string): Promise
         throw err;
       }
     }
+    
+    // No need to remove export attributes since we didn't add them to the original document
+    // document.documentElement.removeAttribute('data-pdf-export-mode');
+    // element.removeAttribute('data-pdf-export-mode');
     
     // Save the PDF
     if (filename) {
@@ -229,26 +318,28 @@ const generatePdfDocument = async (
     notification.textContent = 'Generating PDF...';
     document.body.appendChild(notification);
     
-    // Make all elements in the invoice container temporarily visible during export
-    const allElements = invoiceElement.querySelectorAll('*');
-    const originalVisibility: {[key: string]: string} = {};
+    // Create a deep clone of the invoice element to use for PDF generation
+    // This completely prevents any visible glitches in the UI
+    const clonedElement = invoiceElement.cloneNode(true) as HTMLElement;
+    clonedElement.style.position = 'absolute';
+    clonedElement.style.left = '-9999px';
+    clonedElement.style.top = '-9999px';
+    clonedElement.style.opacity = '0';
+    clonedElement.style.pointerEvents = 'none';
+    document.body.appendChild(clonedElement);
     
-    allElements.forEach((el, idx) => {
+    // Make all elements in the cloned container visible during export
+    const allElements = clonedElement.querySelectorAll('*');
+    allElements.forEach(el => {
       if (el instanceof HTMLElement) {
-        originalVisibility[idx] = el.style.visibility;
         el.style.visibility = 'visible';
       }
     });
     
-    // Ensure booking-description doesn't get cut off
-    const descriptions = invoiceElement.querySelectorAll('.booking-description');
-    const originalOverflow: {[key: string]: string} = {};
-    const originalMaxHeight: {[key: string]: string} = {};
-    
-    descriptions.forEach((desc, idx) => {
+    // Ensure booking-description doesn't get cut off in clone
+    const descriptions = clonedElement.querySelectorAll('.booking-description');
+    descriptions.forEach(desc => {
       if (desc instanceof HTMLElement) {
-        originalOverflow[idx] = desc.style.overflow;
-        originalMaxHeight[idx] = desc.style.maxHeight;
         desc.style.overflow = 'visible';
         desc.style.maxHeight = 'none';
       }
@@ -257,29 +348,15 @@ const generatePdfDocument = async (
     // Small delay to ensure rendering is complete
     await new Promise(resolve => setTimeout(resolve, 200));
     
-    // Add export mode data attribute for special export styling
-    invoiceElement.setAttribute('data-pdf-export-mode', 'true');
+    // Generate PDF using the invisible clone
+    // Clean the invoice number to make it filename-safe
+    const cleanInvoiceNumber = invoiceData.invoiceNumber?.replace(/[^a-zA-Z0-9\-_]/g, '') || 'Unknown';
+    const filename = `Invoice ${cleanInvoiceNumber}.pdf`;
     
-    // Generate PDF
-    await htmlToPdf(invoiceElement, `GLIDE_Invoice_${invoiceData.invoiceNumber}.pdf`);
+    await htmlToPdf(clonedElement, filename);
     
-    // Remove export mode data attribute
-    invoiceElement.removeAttribute('data-pdf-export-mode');
-    
-    // Restore visibility
-    allElements.forEach((el, idx) => {
-      if (el instanceof HTMLElement) {
-        el.style.visibility = originalVisibility[idx] || '';
-      }
-    });
-    
-    // Restore overflow settings
-    descriptions.forEach((desc, idx) => {
-      if (desc instanceof HTMLElement) {
-        desc.style.overflow = originalOverflow[idx] || '';
-        desc.style.maxHeight = originalMaxHeight[idx] || '';
-      }
-    });
+    // Remove the cloned element from the DOM
+    document.body.removeChild(clonedElement);
     
     // Update notification
     notification.textContent = 'PDF Downloaded!';
@@ -337,7 +414,11 @@ export const downloadPDF = async (
     }
     
     // Use the improved rendering method
-    await htmlToPdf(invoiceElement, `GLIDE_Invoice_${invoiceData.invoiceNumber}.pdf`);
+    // Clean the invoice number to make it filename-safe
+    const cleanInvoiceNumber = invoiceData.invoiceNumber?.replace(/[^a-zA-Z0-9\-_]/g, '') || 'Unknown';
+    const filename = `Invoice ${cleanInvoiceNumber}.pdf`;
+    
+    await htmlToPdf(invoiceElement, filename);
     
   } catch (error) {
     console.error('Error generating PDF:', error);

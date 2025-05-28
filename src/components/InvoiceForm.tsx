@@ -385,7 +385,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
             type="button"
             onClick={handleGeneratePDF}
             disabled={isGenerating}
-            className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition"
+            className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition font-bold"
           >
             {isGenerating ? 'Generating...' : 'Export PDF'}
           </button>
@@ -488,12 +488,17 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
                     name="date"
                     control={control}
                     render={({ field }) => (
-                      <input
-                        {...field}
-                        type="date"
-                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
-                        disabled={!watch('showDate')}
-                      />
+                      <div className="relative">
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="May 5th, 2025"
+                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm pr-10"
+                        />
+                        <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          {/* Replace with your actual calendar icon component or SVG */}
+                        </span>
+                      </div>
                     )}
                   />
                 </div>
@@ -693,60 +698,6 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 <div className="pl-4 border-l-2 border-gray-300 space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Deposit Amount (USD)
-                    </label>
-                    <Controller
-                      name="offerDeposit"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          type="text"
-                          placeholder="XX,XXX"
-                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
-                        />
-                      )}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Due Date
-                    </label>
-                    <Controller
-                      name="offerDueDate"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          type="text"
-                          placeholder="DD MM YYYY"
-                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
-                        />
-                      )}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Title
-                    </label>
-                    <Controller
-                      name="offerPendingTitle"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          type="text"
-                          placeholder="OFFER PENDING:"
-                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
-                        />
-                      )}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Text
                     </label>
                     <Controller
@@ -865,10 +816,11 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
                         <input
                           type="text"
                           placeholder="Amount"
-                          value={item.amount}
+                          value={item.amount || ''}
                           onChange={(e) => {
                             const newItems = [...editingPaymentItems];
-                            newItems[index].amount = parseFloat(e.target.value);
+                            const value = e.target.value;
+                            newItems[index].amount = value === '' ? '' : parseFloat(value) || '';
                             setEditingPaymentItems(newItems);
                           }}
                           className="w-full p-2 border border-gray-300 rounded"
@@ -911,7 +863,9 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 <div className="w-48">
                   <div className="flex justify-between py-2">
                     <span className="font-medium">Total:</span>
-                    <span className="font-medium">${calculateTotal().toFixed(2)}</span>
+                    <span className="font-medium">
+                      {calculateTotal().toFixed(2)} {watch('currency') || 'USD'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -921,22 +875,171 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
               <h3 className="text-lg font-medium mb-4">Payment Details</h3>
               
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <Controller
-                    name="descriptionTitle"
-                    control={control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="text"
-                        placeholder="DESCRIPTION NIHI SUMBA BOOKING 25XXXXX"
-                        className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
-                      />
-                    )}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <Controller
+                      name="descriptionTitle"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="Description"
+                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                        />
+                      )}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Currency
+                    </label>
+                    <Controller
+                      name="currency"
+                      control={control}
+                      defaultValue="USD"
+                      render={({ field }) => (
+                        <select
+                          {...field}
+                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                        >
+                          <option value="USD">USD - US Dollar</option>
+                          <option value="EUR">EUR - Euro</option>
+                          <option value="GBP">GBP - British Pound</option>
+                          <option value="JPY">JPY - Japanese Yen</option>
+                          <option value="AUD">AUD - Australian Dollar</option>
+                          <option value="CAD">CAD - Canadian Dollar</option>
+                          <option value="CHF">CHF - Swiss Franc</option>
+                          <option value="CNY">CNY - Chinese Yuan</option>
+                          <option value="SEK">SEK - Swedish Krona</option>
+                          <option value="NZD">NZD - New Zealand Dollar</option>
+                          <option value="MXN">MXN - Mexican Peso</option>
+                          <option value="SGD">SGD - Singapore Dollar</option>
+                          <option value="HKD">HKD - Hong Kong Dollar</option>
+                          <option value="NOK">NOK - Norwegian Krone</option>
+                          <option value="KRW">KRW - South Korean Won</option>
+                          <option value="TRY">TRY - Turkish Lira</option>
+                          <option value="RUB">RUB - Russian Ruble</option>
+                          <option value="INR">INR - Indian Rupee</option>
+                          <option value="BRL">BRL - Brazilian Real</option>
+                          <option value="ZAR">ZAR - South African Rand</option>
+                          <option value="PLN">PLN - Polish Zloty</option>
+                          <option value="ILS">ILS - Israeli Shekel</option>
+                          <option value="DKK">DKK - Danish Krone</option>
+                          <option value="CZK">CZK - Czech Koruna</option>
+                          <option value="HUF">HUF - Hungarian Forint</option>
+                          <option value="RON">RON - Romanian Leu</option>
+                          <option value="BGN">BGN - Bulgarian Lev</option>
+                          <option value="HRK">HRK - Croatian Kuna</option>
+                          <option value="ISK">ISK - Icelandic Krona</option>
+                          <option value="THB">THB - Thai Baht</option>
+                          <option value="MYR">MYR - Malaysian Ringgit</option>
+                          <option value="IDR">IDR - Indonesian Rupiah</option>
+                          <option value="PHP">PHP - Philippine Peso</option>
+                          <option value="VND">VND - Vietnamese Dong</option>
+                          <option value="AED">AED - UAE Dirham</option>
+                          <option value="SAR">SAR - Saudi Riyal</option>
+                          <option value="QAR">QAR - Qatari Riyal</option>
+                          <option value="KWD">KWD - Kuwaiti Dinar</option>
+                          <option value="BHD">BHD - Bahraini Dinar</option>
+                          <option value="OMR">OMR - Omani Rial</option>
+                          <option value="JOD">JOD - Jordanian Dinar</option>
+                          <option value="LBP">LBP - Lebanese Pound</option>
+                          <option value="EGP">EGP - Egyptian Pound</option>
+                          <option value="MAD">MAD - Moroccan Dirham</option>
+                          <option value="TND">TND - Tunisian Dinar</option>
+                          <option value="DZD">DZD - Algerian Dinar</option>
+                          <option value="LYD">LYD - Libyan Dinar</option>
+                          <option value="NGN">NGN - Nigerian Naira</option>
+                          <option value="GHS">GHS - Ghanaian Cedi</option>
+                          <option value="KES">KES - Kenyan Shilling</option>
+                          <option value="UGX">UGX - Ugandan Shilling</option>
+                          <option value="TZS">TZS - Tanzanian Shilling</option>
+                          <option value="ETB">ETB - Ethiopian Birr</option>
+                          <option value="MWK">MWK - Malawian Kwacha</option>
+                          <option value="ZMW">ZMW - Zambian Kwacha</option>
+                          <option value="BWP">BWP - Botswana Pula</option>
+                          <option value="NAD">NAD - Namibian Dollar</option>
+                          <option value="SZL">SZL - Swazi Lilangeni</option>
+                          <option value="LSL">LSL - Lesotho Loti</option>
+                          <option value="MUR">MUR - Mauritian Rupee</option>
+                          <option value="SCR">SCR - Seychellois Rupee</option>
+                          <option value="MGA">MGA - Malagasy Ariary</option>
+                          <option value="KMF">KMF - Comorian Franc</option>
+                          <option value="DJF">DJF - Djiboutian Franc</option>
+                          <option value="SOS">SOS - Somali Shilling</option>
+                          <option value="ERN">ERN - Eritrean Nakfa</option>
+                          <option value="CLP">CLP - Chilean Peso</option>
+                          <option value="ARS">ARS - Argentine Peso</option>
+                          <option value="UYU">UYU - Uruguayan Peso</option>
+                          <option value="PYG">PYG - Paraguayan Guarani</option>
+                          <option value="BOB">BOB - Bolivian Boliviano</option>
+                          <option value="PEN">PEN - Peruvian Sol</option>
+                          <option value="COP">COP - Colombian Peso</option>
+                          <option value="VES">VES - Venezuelan Bolívar</option>
+                          <option value="GYD">GYD - Guyanese Dollar</option>
+                          <option value="SRD">SRD - Surinamese Dollar</option>
+                          <option value="FKP">FKP - Falkland Islands Pound</option>
+                          <option value="AWG">AWG - Aruban Florin</option>
+                          <option value="ANG">ANG - Netherlands Antillean Guilder</option>
+                          <option value="BBD">BBD - Barbadian Dollar</option>
+                          <option value="BZD">BZD - Belize Dollar</option>
+                          <option value="BMD">BMD - Bermudian Dollar</option>
+                          <option value="KYD">KYD - Cayman Islands Dollar</option>
+                          <option value="XCD">XCD - East Caribbean Dollar</option>
+                          <option value="GTQ">GTQ - Guatemalan Quetzal</option>
+                          <option value="HNL">HNL - Honduran Lempira</option>
+                          <option value="NIO">NIO - Nicaraguan Córdoba</option>
+                          <option value="CRC">CRC - Costa Rican Colón</option>
+                          <option value="PAB">PAB - Panamanian Balboa</option>
+                          <option value="JMD">JMD - Jamaican Dollar</option>
+                          <option value="HTG">HTG - Haitian Gourde</option>
+                          <option value="DOP">DOP - Dominican Peso</option>
+                          <option value="CUP">CUP - Cuban Peso</option>
+                          <option value="TTD">TTD - Trinidad and Tobago Dollar</option>
+                          <option value="BSD">BSD - Bahamian Dollar</option>
+                          <option value="XPF">XPF - CFP Franc</option>
+                          <option value="FJD">FJD - Fijian Dollar</option>
+                          <option value="PGK">PGK - Papua New Guinean Kina</option>
+                          <option value="SBD">SBD - Solomon Islands Dollar</option>
+                          <option value="VUV">VUV - Vanuatu Vatu</option>
+                          <option value="WST">WST - Samoan Tala</option>
+                          <option value="TOP">TOP - Tongan Paʻanga</option>
+                          <option value="NPR">NPR - Nepalese Rupee</option>
+                          <option value="BTN">BTN - Bhutanese Ngultrum</option>
+                          <option value="BDT">BDT - Bangladeshi Taka</option>
+                          <option value="LKR">LKR - Sri Lankan Rupee</option>
+                          <option value="MVR">MVR - Maldivian Rufiyaa</option>
+                          <option value="PKR">PKR - Pakistani Rupee</option>
+                          <option value="AFN">AFN - Afghan Afghani</option>
+                          <option value="IRR">IRR - Iranian Rial</option>
+                          <option value="IQD">IQD - Iraqi Dinar</option>
+                          <option value="SYP">SYP - Syrian Pound</option>
+                          <option value="YER">YER - Yemeni Rial</option>
+                          <option value="AMD">AMD - Armenian Dram</option>
+                          <option value="AZN">AZN - Azerbaijani Manat</option>
+                          <option value="GEL">GEL - Georgian Lari</option>
+                          <option value="KZT">KZT - Kazakhstani Tenge</option>
+                          <option value="KGS">KGS - Kyrgyzstani Som</option>
+                          <option value="TJS">TJS - Tajikistani Somoni</option>
+                          <option value="TMT">TMT - Turkmenistani Manat</option>
+                          <option value="UZS">UZS - Uzbekistani Som</option>
+                          <option value="MNT">MNT - Mongolian Tugrik</option>
+                          <option value="LAK">LAK - Lao Kip</option>
+                          <option value="KHR">KHR - Cambodian Riel</option>
+                          <option value="MMK">MMK - Myanmar Kyat</option>
+                          <option value="BND">BND - Brunei Dollar</option>
+                          <option value="TWD">TWD - Taiwan Dollar</option>
+                          <option value="MOP">MOP - Macanese Pataca</option>
+                          <option value="KPW">KPW - North Korean Won</option>
+                        </select>
+                      )}
+                    />
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -951,7 +1054,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
                         <input
                           {...field}
                           type="text"
-                          placeholder="DD MM YYYY"
+                          placeholder="Month DDth, YYYY"
                           className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
                         />
                       )}
@@ -960,7 +1063,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Deposit Amount (USD)
+                      Deposit Amount ({watch('currency') || 'USD'})
                     </label>
                     <Controller
                       name="depositAmount"
@@ -987,7 +1090,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
                         <input
                           {...field}
                           type="text"
-                          placeholder="DD MM YYYY"
+                          placeholder="Month DDth, YYYY"
                           className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
                         />
                       )}
@@ -996,7 +1099,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Balance Amount (USD)
+                      Balance Amount ({watch('currency') || 'USD'})
                     </label>
                     <Controller
                       name="balanceAmount"
@@ -1015,7 +1118,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Total Amount (USD)
+                    Total Amount ({watch('currency') || 'USD'})
                   </label>
                   <Controller
                     name="totalAmount"
@@ -1366,90 +1469,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
                       <span className="text-sm font-medium">Show Customer Name</span>
                     </div>
                     
-                    <div className="flex items-center">
-                      <Controller
-                        name="showPackage"
-                        control={control}
-                        render={({ field: { onChange, value, ...field } }) => (
-                          <input
-                            {...field}
-                            type="checkbox"
-                            checked={value}
-                            onChange={(e) => onChange(e.target.checked)}
-                            className="mr-2"
-                          />
-                        )}
-                      />
-                      <span className="text-sm font-medium">Show Package</span>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <Controller
-                        name="showAdults"
-                        control={control}
-                        render={({ field: { onChange, value, ...field } }) => (
-                          <input
-                            {...field}
-                            type="checkbox"
-                            checked={value}
-                            onChange={(e) => onChange(e.target.checked)}
-                            className="mr-2"
-                          />
-                        )}
-                      />
-                      <span className="text-sm font-medium">Show Adults</span>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <Controller
-                        name="showDates"
-                        control={control}
-                        render={({ field: { onChange, value, ...field } }) => (
-                          <input
-                            {...field}
-                            type="checkbox"
-                            checked={value}
-                            onChange={(e) => onChange(e.target.checked)}
-                            className="mr-2"
-                          />
-                        )}
-                      />
-                      <span className="text-sm font-medium">Show Dates</span>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <Controller
-                        name="showAccommodation"
-                        control={control}
-                        render={({ field: { onChange, value, ...field } }) => (
-                          <input
-                            {...field}
-                            type="checkbox"
-                            checked={value}
-                            onChange={(e) => onChange(e.target.checked)}
-                            className="mr-2"
-                          />
-                        )}
-                      />
-                      <span className="text-sm font-medium">Show Accommodation</span>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <Controller
-                        name="showInclusions"
-                        control={control}
-                        render={({ field: { onChange, value, ...field } }) => (
-                          <input
-                            {...field}
-                            type="checkbox"
-                            checked={value}
-                            onChange={(e) => onChange(e.target.checked)}
-                            className="mr-2"
-                          />
-                        )}
-                      />
-                      <span className="text-sm font-medium">Show Inclusions</span>
-                    </div>
+
                   </div>
                   
                   <div>
@@ -1505,85 +1525,18 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Package
+                      Additional Details
                     </label>
                     <Controller
-                      name="package"
+                      name="bookingSummaryDetails"
                       control={control}
                       render={({ field }) => (
-                        <input
+                        <textarea
                           {...field}
-                          type="text"
+                          rows={5}
+                          placeholder="Package: PACKAGE NAME&#10;2 adults&#10;MONTH DDth - DDnd, YYYY | X nights&#10;ACCOMMODATION DETAILS&#10;All listed inclusions in the original offer"
                           className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
-                        />
-                      )}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Number of Adults
-                    </label>
-                    <Controller
-                      name="adults"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          type="text"
-                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
-                        />
-                      )}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Dates
-                    </label>
-                    <Controller
-                      name="dates"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          type="text"
-                          placeholder="MONTH DDth - DDnd, YYYY | X nights"
-                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
-                        />
-                      )}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Accommodation
-                    </label>
-                    <Controller
-                      name="accommodation"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          type="text"
-                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
-                        />
-                      )}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Inclusions/Additional Notes
-                    </label>
-                    <Controller
-                      name="inclusions"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          type="text"
-                          className="border-gray-300 focus:ring-black focus:border-black block w-full rounded-md shadow-sm"
+                          style={{ wordWrap: 'break-word', wordBreak: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}
                         />
                       )}
                     />
